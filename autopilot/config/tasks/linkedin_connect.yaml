@@ -1,0 +1,47 @@
+## LinkedIn Connection Request Automation
+## Used by Phase 1 (coordinate_runner) and Phase 2 (ocr_runner)
+
+task_name: linkedin_connect
+description: "Automate LinkedIn connection requests — click Connect, then Send"
+
+# ── Phase 1: Coordinate-based action sequence ──
+coordinate_actions:
+  - name: click_connect
+    description: "Click the 'Connect' button"
+    x: 850
+    y: 420
+    delay_after: 1.5
+
+  - name: click_send
+    description: "Click the 'Send' invitation button"
+    x: 680
+    y: 530
+    delay_after: 1.2
+
+  - name: click_done
+    description: "Click 'Done' if a confirmation dialog appears"
+    x: 680
+    y: 470
+    delay_after: 1.0
+
+# ── Phase 2: OCR keyword targets ──
+ocr_targets:
+  - keyword: "connect"
+    priority: 1
+    description: "Primary 'Connect' button on profile card"
+
+  - keyword: "send"
+    priority: 2
+    description: "'Send' button in the invitation dialog"
+
+  - keyword: "done"
+    priority: 3
+    description: "'Done' button on confirmation dialog"
+
+# ── Shared config ──
+defaults:
+  click_delay: 1.2
+  ocr_confidence_threshold: 60
+  max_retries: 3
+  screenshot_region: null  # null = full screen
+  scroll_between_actions: false
