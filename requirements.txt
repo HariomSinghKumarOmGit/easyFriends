@@ -1,0 +1,14 @@
+pyautogui>=0.9.54
+pytesseract>=0.3.10
+Pillow>=10.0.0
+PyYAML>=6.0
+anthropic>=0.25.0
+fastapi>=0.110.0
+uvicorn>=0.29.0
+pydantic>=2.0.0
+
+# Phase 6: Local AI Profile Analyser
+deepface>=0.0.89
+opencv-python-headless>=4.8.0
+tf-keras>=2.16.0
+requests>=2.31.0

@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoPilot — Control Panel</title>
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface-2: #1a1a26;
+            --border: #2a2a3a;
+            --border-glow: #3d3dff33;
+            --text: #e4e4ef;
+            --text-dim: #8888aa;
+            --accent: #6c6cff;
+            --accent-glow: #6c6cff40;
+            --green: #3ddc84;
+            --green-glow: #3ddc8440;
+            --red: #ff4d6a;
+            --red-glow: #ff4d6a40;
+            --yellow: #ffc857;
+            --radius: 12px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--text-dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header h1 span {
+            font-weight: 400;
+            opacity: 0.5;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .connection-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--red);
+            transition: background 0.3s;
+        }
+
+        .connection-dot.connected {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green-glow);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ── Layout ── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            height: calc(100vh - 130px);
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* ── Controls Panel ── */
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+        }
+
+        /* Select / Input */
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238888aa'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        /* Range slider */
+        .range-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .range-value {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--accent);
+            min-width: 36px;
+            text-align: right;
+        }
+
+        /* Checkbox */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .checkbox-row span {
+            font-size: 14px;
+        }
+
+        /* ── Buttons ── */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-run {
+            background: linear-gradient(135deg, var(--green), #28a968);
+            color: #000;
+            box-shadow: 0 4px 16px var(--green-glow);
+        }
+
+        .btn-run:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px var(--green-glow);
+        }
+
+        .btn-run:active { transform: translateY(0); }
+
+        .btn-run:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, var(--red), #cc3355);
+            color: #fff;
+            box-shadow: 0 4px 16px var(--red-glow);
+        }
+
+        .btn-stop:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px var(--red-glow);
+        }
+
+        .btn-stop:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            flex: 0;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        /* ── Right Panel ── */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ── Stats Bar ── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .stats-bar-analyser {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 0;
+        }
+
+        .stats-bar-analyser .stat-card {
+            border-left: 3px solid var(--accent);
+        }
+
+        .stat-value.cyan { color: #22d3ee; }
+        .stat-value.purple { color: #a855f7; }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: var(--mono);
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .stat-value.green { color: var(--green); }
+        .stat-value.red { color: var(--red); }
+        .stat-value.accent { color: var(--accent); }
+        .stat-value.yellow { color: var(--yellow); }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* ── Progress Bar ── */
+        .progress-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .progress-header span:first-child {
+            color: var(--text-dim);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 11px;
+        }
+
+        .progress-header span:last-child {
+            font-family: var(--mono);
+            color: var(--accent);
+        }
+
+        .progress-track {
+            height: 6px;
+            background: var(--surface-2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #a855f7);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* ── Log Panel ── */
+        .log-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .log-card .card-header {
+            flex-shrink: 0;
+        }
+
+        .log-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            line-height: 1.8;
+            background: #08080d;
+            scroll-behavior: smooth;
+        }
+
+        .log-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .log-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .log-line {
+            display: flex;
+            gap: 8px;
+            padding: 2px 0;
+            animation: fadeIn 0.15s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-time {
+            color: var(--text-dim);
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+
+        .log-msg { color: var(--text); word-break: break-word; }
+        .log-msg.success { color: var(--green); }
+        .log-msg.error { color: var(--red); }
+        .log-msg.warn { color: var(--yellow); }
+        .log-msg.info { color: var(--accent); }
+        .log-msg.dim { color: var(--text-dim); }
+
+        /* ── Phase Tabs ── */
+        .phase-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--surface-2);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .phase-tab {
+            flex: 1;
+            padding: 8px 4px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .phase-tab:hover { color: var(--text); }
+
+        .phase-tab.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        /* ── Phase Config Panels ── */
+        .phase-config { display: none; }
+        .phase-config.active { display: flex; flex-direction: column; gap: 12px; }
+
+        /* Tags */
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: var(--mono);
+            color: var(--accent);
+        }
+
+        .tag.skip {
+            background: var(--red-glow);
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* ── Divider ── */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        /* ── Running indicator ── */
+        .running-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            font-size: 13px;
+            color: var(--green);
+        }
+
+        .running-indicator.active { display: flex; }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .log-card {
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">🤖</div>
+            <h1>AutoPilot <span>v0.3.0</span></h1>
+        </div>
+        <div class="connection-badge">
+            <div class="connection-dot" id="connDot"></div>
+            <span id="connText">Disconnected</span>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+
+        <!-- Left: Controls -->
+        <div class="controls-panel">
+            <!-- Run Settings (Moved to Top for Visibility) -->
+            <div class="card" style="border-top: 4px solid var(--green);">
+                <div class="card-header">
+                    <h2>Run Actions</h2>
+                </div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+                    <div class="btn-group">
+                        <button class="btn btn-run" id="btnRun" onclick="runTask()" style="font-size: 16px; height: 50px;">
+                            ▶ START AUTOPILOT
+                        </button>
+                        <button class="btn btn-stop" id="btnStop" onclick="stopTask()" disabled>
+                            ■ STOP
+                        </button>
+                    </div>
+                    <div class="running-indicator" id="runningIndicator">
+                        <div class="spinner"></div>
+                        <span>Agent is active...</span>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="control-group">
+                            <label>Loop Count</label>
+                            <input type="number" id="loopCount" value="10" min="1" max="1000">
+                        </div>
+                        <div class="control-group">
+                            <label>Delay (ms)</label>
+                            <input type="number" id="delayMs" value="1200" min="100" max="10000" step="100">
+                        </div>
+                    </div>
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="dryRun" checked>
+                        <span>🔒 Dry Run Mode</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Task Configuration</h2>
+                </div>
+                <div class="card-body">
+                    <div class="control-group">
+                        <label>Select Task</label>
+                        <select id="taskSelect">
+                            <option value="linkedin_connect">linkedin_connect</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase Selector -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Automation Mode</h2>
+                </div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="phase-tabs">
+                        <button class="phase-tab active" data-phase="1" onclick="selectPhase(1)">P1 Coords</button>
+                        <button class="phase-tab" data-phase="2" onclick="selectPhase(2)">P2 OCR</button>
+                        <button class="phase-tab" data-phase="3" onclick="selectPhase(3)">P3 Vision</button>
+                        <button class="phase-tab" data-phase="4" onclick="selectPhase(4)">P4 Mobile</button>
+                    </div>
+
+                    <!-- Phase 1 Config -->
+                    <div class="phase-config active" id="phaseConfig1">
+                        <div class="control-group">
+                            <label>Coordinates (from YAML)</label>
+                            <div id="coordsList" style="font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.8;">
+                                (950, 430) — Connect button<br>
+                                (1100, 600) — Send popup
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 2 Config -->
+                    <div class="phase-config" id="phaseConfig2">
+                        <div class="control-group">
+                            <label>Keywords (click these)</label>
+                            <div class="tag-list" id="keywordTags">
+                                <span class="tag">Connect</span>
+                                <span class="tag">Send</span>
+                                <span class="tag">Done</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>Skip Keywords (ignore these)</label>
+                            <div class="tag-list" id="skipTags">
+                                <span class="tag skip">Pending</span>
+                                <span class="tag skip">Message</span>
+                                <span class="tag skip">Follow</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>OCR Confidence Threshold</label>
+                            <div class="range-wrapper">
+                                <input type="range" id="ocrThreshold" min="20" max="100" value="60"
+                                       oninput="document.getElementById('threshVal').textContent=this.value">
+                                <span class="range-value" id="threshVal">60</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase 3 Config -->
+                    <div class="phase-config" id="phaseConfig3">
+                        <div class="control-group">
+                            <label>Vision Model</label>
+                            <select id="visionModel">
+                                <option value="claude-sonnet-4-20250514">claude-sonnet-4-20250514</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="fallbackOcr" checked>
+                            <span>Fallback to OCR on failure</span>
+                        </div>
+                    </div>
+
+                    <!-- Phase 4 Config -->
+                    <div class="phase-config" id="phaseConfig4">
+                        <div class="control-group">
+                            <label>ADB Device (IP:Port or Serial)</label>
+                            <input type="text" id="adbDevice" placeholder="192.168.1.x:5555">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyser (Phase 6) -->
+            <div class="card" id="analyserCard">
+                <div class="card-header">
+                    <h2>🔍 Analyser (Phase 6)</h2>
+                </div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:14px;">
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="analyserEnabled">
+                        <span>Enable Profile Analysis</span>
+                    </div>
+
+                    <div id="analyserFields" style="display:none;flex-direction:column;gap:14px;">
+                        <div class="control-group">
+                            <label>AI Model</label>
+                            <select id="analyserModel">
+                                <option value="deepface">DeepFace (offline, fast)</option>
+                                <option value="llava">LLaVA via Ollama (multimodal)</option>
+                            </select>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="control-group">
+                            <label>Gender Filter</label>
+                            <select id="analyserGender">
+                                <option value="any">Any</option>
+                                <option value="female">Female only</option>
+                                <option value="male">Male only</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>Gender Confidence Threshold</label>
+                            <div class="range-wrapper">
+                                <input type="range" id="analyserConfidence" min="0" max="100" value="65"
+                                       oninput="document.getElementById('confVal').textContent=(this.value/100).toFixed(2)">
+                                <span class="range-value" id="confVal">0.65</span>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="control-group">
+                            <label>Age Range</label>
+                            <div style="display:flex;gap:10px;">
+                                <div style="flex:1;">
+                                    <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">Min</div>
+                                    <input type="number" id="analyserAgeMin" value="20" min="0" max="100">
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">Max</div>
+                                    <input type="number" id="analyserAgeMax" value="40" min="0" max="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="control-group">
+                            <label>Follower Count Range</label>
+                            <div style="display:flex;gap:10px;">
+                                <div style="flex:1;">
+                                    <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">Min</div>
+                                    <input type="number" id="analyserFollowersMin" value="500" min="0" step="100">
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">Max</div>
+                                    <input type="number" id="analyserFollowersMax" value="50000" min="0" step="1000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <button class="btn btn-secondary" style="flex:initial;width:100%;" onclick="testAnalyser()">
+                            🧪 Test Analyser (analyse current screen)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Output -->
+        <div class="right-panel">
+            <!-- Stats -->
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-value green" id="statSuccess">0</div>
+                    <div class="stat-label">Success</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value red" id="statFailed">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value accent" id="statTotal">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value yellow" id="statPhase">—</div>
+                    <div class="stat-label">Phase</div>
+                </div>
+            </div>
+
+            <!-- Analyser Stats -->
+            <div class="stats-bar-analyser" id="analyserStatsBar" style="display:none;">
+                <div class="stat-card">
+                    <div class="stat-value cyan" id="statAnalysed">0</div>
+                    <div class="stat-label">Analysed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value purple" id="statSkippedFilter">0</div>
+                    <div class="stat-label">Skipped (Filter)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value green" id="statConnected">0</div>
+                    <div class="stat-label">Connected</div>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span>Progress</span>
+                    <span id="progressText">0 / 0</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- Log -->
+            <div class="card log-card">
+                <div class="card-header">
+                    <h2>Live Log</h2>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-secondary" onclick="clearLog()">Clear</button>
+                        <button class="btn btn-secondary" onclick="exportLog()">Export .txt</button>
+                    </div>
+                </div>
+                <div class="log-body" id="logBody">
+                    <div class="log-line">
+                        <span class="log-time">--:--:--</span>
+                        <span class="log-msg dim">Ready. Configure your task and click RUN.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── State ──
+        const API_BASE = 'http://localhost:8000';
+        let selectedPhase = 1;
+        let isRunning = false;
+        let abortController = null;
+        let logLines = [];
+
+        // ── Phase Tabs ──
+        function selectPhase(phase) {
+            selectedPhase = phase;
+            document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.phase-tab[data-phase="${phase}"]`).classList.add('active');
+            document.querySelectorAll('.phase-config').forEach(p => p.classList.remove('active'));
+            document.getElementById(`phaseConfig${phase}`).classList.add('active');
+            document.getElementById('statPhase').textContent = phase;
+        }
+
+        // ── Logging ──
+        function addLog(msg, type = '') {
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-GB');
+            const logBody = document.getElementById('logBody');
+
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${type}">${escapeHtml(msg)}</span>`;
+            logBody.appendChild(line);
+            logBody.scrollTop = logBody.scrollHeight;
+
+            logLines.push(`[${time}] ${msg}`);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearLog() {
+            document.getElementById('logBody').innerHTML = '';
+            logLines = [];
+            addLog('Log cleared.', 'dim');
+        }
+
+        function exportLog() {
+            if (logLines.length === 0) {
+                addLog('Nothing to export.', 'warn');
+                return;
+            }
+            const blob = new Blob([logLines.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `autopilot_log_${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            addLog('Log exported to .txt', 'info');
+        }
+
+        // ── Stats ──
+        function updateStats(results, analyserStats) {
+            const success = results.filter(r => r.success).length;
+            const failed = results.filter(r => !r.success).length;
+            const total = results.length;
+
+            document.getElementById('statSuccess').textContent = success;
+            document.getElementById('statFailed').textContent = failed;
+            document.getElementById('statTotal').textContent = total;
+
+            // Analyser stats
+            if (analyserStats) {
+                document.getElementById('analyserStatsBar').style.display = 'grid';
+                document.getElementById('statAnalysed').textContent = analyserStats.analysed || 0;
+                document.getElementById('statSkippedFilter').textContent = analyserStats.skipped || 0;
+                document.getElementById('statConnected').textContent = analyserStats.connected || 0;
+            }
+        }
+
+        function updateProgress(current, total) {
+            const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressText').textContent = `${current} / ${total}`;
+        }
+
+        function resetStats() {
+            document.getElementById('statSuccess').textContent = '0';
+            document.getElementById('statFailed').textContent = '0';
+            document.getElementById('statTotal').textContent = '0';
+            document.getElementById('statAnalysed').textContent = '0';
+            document.getElementById('statSkippedFilter').textContent = '0';
+            document.getElementById('statConnected').textContent = '0';
+            document.getElementById('analyserStatsBar').style.display = 'none';
+            updateProgress(0, 0);
+        }
+
+        // ── Connection Check ──
+        async function checkConnection() {
+            try {
+                const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+                const data = await res.json();
+                if (data.status === 'healthy') {
+                    document.getElementById('connDot').classList.add('connected');
+                    document.getElementById('connText').textContent = 'Connected';
+                    return true;
+                }
+            } catch (e) {
+                document.getElementById('connDot').classList.remove('connected');
+                document.getElementById('connText').textContent = 'Disconnected';
+            }
+            return false;
+        }
+
+        // ── Run Task ──
+        async function runTask() {
+            if (isRunning) return;
+
+            const connected = await checkConnection();
+            if (!connected) {
+                addLog('Cannot connect to API at ' + API_BASE + '. Start the server first: python -m autopilot.main serve', 'error');
+                return;
+            }
+
+            isRunning = true;
+            abortController = new AbortController();
+
+            // UI state
+            document.getElementById('btnRun').disabled = true;
+            document.getElementById('btnStop').disabled = false;
+            document.getElementById('runningIndicator').classList.add('active');
+            resetStats();
+
+            const task = document.getElementById('taskSelect').value;
+            const loop = parseInt(document.getElementById('loopCount').value) || 10;
+            const delayMs = parseInt(document.getElementById('delayMs').value) || 1200;
+            const dryRun = document.getElementById('dryRun').checked;
+
+            const params = {
+                dry_run: dryRun,
+                loop: loop,
+                delay_ms: delayMs,
+            };
+
+            // Phase-specific params
+            if (selectedPhase === 3) {
+                params.fallback_to_ocr = document.getElementById('fallbackOcr').checked;
+            }
+            if (selectedPhase === 4) {
+                const device = document.getElementById('adbDevice').value;
+                if (device) params.serial = device;
+            }
+
+            // Build analyser config
+            const analyserEnabled = document.getElementById('analyserEnabled').checked;
+            let analyser = null;
+            if (analyserEnabled) {
+                analyser = {
+                    enabled: true,
+                    model: document.getElementById('analyserModel').value,
+                    gender: document.getElementById('analyserGender').value,
+                    age_min: parseInt(document.getElementById('analyserAgeMin').value) || null,
+                    age_max: parseInt(document.getElementById('analyserAgeMax').value) || null,
+                    followers_min: parseInt(document.getElementById('analyserFollowersMin').value) || null,
+                    followers_max: parseInt(document.getElementById('analyserFollowersMax').value) || null,
+                };
+            }
+
+            const body = {
+                phase: selectedPhase,
+                task: task,
+                params: params,
+                analyser: analyser,
+            };
+
+            document.getElementById('statPhase').textContent = selectedPhase;
+            const modeLabel = dryRun ? 'DRY RUN' : 'LIVE';
+            const analyserLabel = analyserEnabled ? ' | analyser=ON' : '';
+            addLog(`▶ Starting Phase ${selectedPhase} — ${task} [${modeLabel}] loop=${loop} delay=${delayMs}ms${analyserLabel}`, 'info');
+
+            updateProgress(0, loop);
+
+            try {
+                const res = await fetch(`${API_BASE}/run-task`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    signal: abortController.signal,
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    addLog(`API error: ${data.detail || res.statusText}`, 'error');
+                    return;
+                }
+
+                // Log each result
+                data.results.forEach((r, i) => {
+                    const icon = r.success ? '✅' : '❌';
+                    const coordStr = r.coords ? `(${r.coords.x}, ${r.coords.y})` : '—';
+                    const phaseUsed = r.phase_used || selectedPhase;
+                    addLog(`${icon} [${i + 1}] P${phaseUsed} ${r.action_taken}  coords=${coordStr}`, r.success ? 'success' : 'error');
+                    if (r.error) {
+                        addLog(`   ⚠️ ${r.error}`, 'warn');
+                    }
+                    // Log analyser info
+                    if (r.analyser) {
+                        const a = r.analyser;
+                        const aIcon = a.action === 'connect' ? '✅' : a.action === 'skip' ? '⏭' : '⚠';
+                        addLog(`   🔍 ${aIcon} gender=${a.gender || '?'} age=${a.age || 0} followers=${(a.followers || 0).toLocaleString()} → ${a.action} (${a.reason || ''})`, 'info');
+                    }
+                });
+
+                updateStats(data.results, data.analyser_stats);
+                updateProgress(data.total_actions, data.total_actions);
+                addLog(`✔ Complete: ${data.successful_actions}/${data.total_actions} actions succeeded`, data.successful_actions === data.total_actions ? 'success' : 'warn');
+
+                // Log analyser summary
+                if (data.analyser_stats) {
+                    const as = data.analyser_stats;
+                    addLog(`🔍 Analyser: ${as.analysed} analysed | ${as.connected} connect | ${as.skipped} skip | ${as.flagged || 0} flag`, 'info');
+                }
+
+            } catch (e) {
+                if (e.name === 'AbortError') {
+                    addLog('⏹ Task stopped by user.', 'warn');
+                } else {
+                    addLog(`Error: ${e.message}`, 'error');
+                }
+            } finally {
+                isRunning = false;
+                abortController = null;
+                document.getElementById('btnRun').disabled = false;
+                document.getElementById('btnStop').disabled = true;
+                document.getElementById('runningIndicator').classList.remove('active');
+            }
+        }
+
+        // ── Stop Task ──
+        function stopTask() {
+            if (abortController) {
+                abortController.abort();
+            }
+        }
+
+        // ── Analyser toggle ──
+        document.getElementById('analyserEnabled').addEventListener('change', function() {
+            document.getElementById('analyserFields').style.display = this.checked ? 'flex' : 'none';
+        });
+
+        // ── Test Analyser ──
+        async function testAnalyser() {
+            const connected = await checkConnection();
+            if (!connected) {
+                addLog('Cannot connect to API. Start the server first.', 'error');
+                return;
+            }
+
+            addLog('🧪 Running analyser test on current screen...', 'info');
+
+            try {
+                const task = document.getElementById('taskSelect').value;
+                const res = await fetch(`${API_BASE}/analyse-profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task: task }),
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    addLog(`Analyser test error: ${data.detail || res.statusText}`, 'error');
+                    return;
+                }
+
+                const aIcon = data.action === 'connect' ? '✅' : data.action === 'skip' ? '⏭' : '⚠';
+                addLog(`🧪 Result: ${aIcon} gender=${data.gender} age=${data.age} conf=${data.confidence} followers=${(data.followers || 0).toLocaleString()} → ${data.action} (${data.reason})`,
+                    data.action === 'connect' ? 'success' : data.action === 'skip' ? 'warn' : 'info'
+                );
+
+            } catch (e) {
+                addLog(`Analyser test failed: ${e.message}`, 'error');
+            }
+        }
+
+        // ── Init ──
+        checkConnection();
+        setInterval(checkConnection, 5000);  // Poll every 5s
+    </script>
+</body>
+</html>
